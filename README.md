@@ -28,6 +28,6 @@ to set up the project locally, follow these instructions
    1. Go to the backend directory:
       ```cd Backend```
    2. Install the require packages
-      ```dotnet restore```  
+      ```dotnet restore``` 
    5. Configure your database connection via `appsettings.json`
    6. Run the appl
