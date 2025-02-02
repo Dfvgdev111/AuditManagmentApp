@@ -1,6 +1,6 @@
 # Audit Management System
 # Project Description
-The Audit Management System is a web application designed to help organizations manage and track audits. It provides functionalities for creating, editing, deleting, and viewing audits.
+The Audit Management System is a backend application designed to help organizations manage and track audits. It provides functionalities for creating, editing, deleting, and viewing audits.
 
 The system is built using **ASP.NET Core** for the backend, with data stored in a database. The API is fully documented using Swagger for easy interaction and testing of endpoints.
 
@@ -27,9 +27,32 @@ to set up the project locally, follow these instructions
 
 ## 2.Setup
 1. Go to the backend directory:
-      cd Backend
+```
+cd backend
+```
 2. Install the require packages
-      dotnet restore
+```
+dotnet restore
+```
+
+
 3. Configure your database connection via `appsettings.json`
+
 4. Run the application
-   dotnet run
+  ``` 
+  dotnet run
+  ```
+# Api Documentation
+The api is documented using Swagger. once you get the application running you can access the Swager Ui at:
+``` 
+http://localhost:5000/Swagger
+  ```
+## Swagger UI
+
+Swagger Ui allows you to explore all available endpoints and test them directly via the browser. You will be able too 
+
+* View the lists of available endpoints
+* See each endpoint and the parameters they accept
+* Test the endpoints by sending requests and vieewing responses
+* Authenticate for verfication of JWT Tokens
+
