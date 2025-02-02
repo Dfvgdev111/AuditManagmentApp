@@ -21,13 +21,15 @@ The system is built using **ASP.NET Core** for the backend, with data stored in 
 # Setup and Installation
 to set up the project locally, follow these instructions
 
-1. Clone the Repoistory
+
+## 1.Clone the Repoistory
    ```git clone https://github.com/your-username/Audit-Management-System.git```
 
-3. Setup
-   1. Go to the backend directory:
-      ```cd Backend```
-   2. Install the require packages
-      ```dotnet restore``` 
-   5. Configure your database connection via `appsettings.json`
-   6. Run the appl
+## 2.Setup
+1. Go to the backend directory:
+      cd Backend
+2. Install the require packages
+      dotnet restore
+3. Configure your database connection via `appsettings.json`
+4. Run the application
+   dotnet run
