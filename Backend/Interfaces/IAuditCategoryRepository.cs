@@ -10,8 +10,8 @@ namespace Backend.Interfaces
 {
     public interface IAuditCategoryRepository
     {
-        
-
+        Task<bool> GetAuditCategoryByProjectId(int projectId,int AuditCategoryId,int AuditId);
+        Task<AuditCategoryDetailsDto> GetSingleCategoryByAudit(int id, int auditID);
         Task<List<AuditCategory>> GetByAuditId(int id,int projectId);
         Task<AuditCategory> CreateAuditCategory(AuditCategory auditCategory);
 

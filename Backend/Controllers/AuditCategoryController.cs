@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
@@ -33,24 +32,10 @@ namespace Backend.Controllers
         }
      
 
-        [HttpGet("{id:int}")]
-       // [ValidateUser("Admin", "Auditor","ProjectManagment","Owner")]
-        public async Task<IActionResult> GetAuditCategory(int id){ //Bug doesn't display answer
-            List<string> permissions = new List<string>() {"Admin","Auditor","ProjectManagment","Owner"};
-            var username = User.FindFirst(ClaimTypes.Name)?.Value;
-            var projectId = Convert.ToInt32(User.FindFirst("Project")?.Value);
-            var role = User.FindFirst(ClaimTypes.Role)?.Value;
-            var ProjectValidation =  await _userValid.ValidationUserAndProjectAsync(username, projectId, role,permissions);
-
-            if(ProjectValidation == false){
-                return Unauthorized();
-                }
-            
-            var AuditCate = await _AuditCateRepo.GetByAuditId(id,projectId);
-
-            if(AuditCate == null){
-                return NotFound();
-            }
+        [HttpGet("{auditId:int}/{id:int}")]
+        [ValidateUser("Admin", "Auditor","ProjectManagment","Owner")]
+        public async Task<IActionResult> GetAuditCategory([FromRoute] int auditId,[FromRoute] int id){ 
+            var AuditCate = await _AuditCateRepo.GetSingleCategoryByAudit(auditId,id);
             return Ok(AuditCate);
         }
         [HttpPost("add-category/{id:int}")]
@@ -63,20 +48,22 @@ namespace Backend.Controllers
             var Audit = await _AuditRepo.GetAuditById(id,projectId);
             if(Audit == null)return NotFound();
             var AuditCategoryDto = auditCategoryDto.CreateAuditCategory(id);
-            await _AuditCateRepo.CreateAuditCategory(AuditCategoryDto);
+            var AuditCategory = await _AuditCateRepo.CreateAuditCategory(AuditCategoryDto);
                 foreach(var questionDto in auditCategoryDto.AuditQuestions){
                     var auditQuestion = questionDto.toAuditQuestion(AuditCategoryDto.Id);
                     await _AuditQuestionRepo.CreateAuditQuestion(auditQuestion);
                 }
-            return Ok (auditCategoryDto);
+            return Ok(auditCategoryDto);
         } 
 
         [HttpPost("add-question/{CategoryId:int}/{AuditId:int}")]
         [ValidateUser("Admin","Auditor","ProjectManagement","Owner")]
         public async Task<IActionResult> CreateQuestionbyAuditCategoryId([FromRoute] int AuditId,[FromRoute]int CategoryId, [FromBody]AuditQuestionDto auditquestionModel){        
             var projectId = Convert.ToInt32(User.FindFirst("Project")?.Value);   
-            var Audit = await _AuditRepo.GetAuditById(AuditId,projectId);
-            if(Audit == null) return NotFound();
+            var Validation = await _AuditCateRepo.GetAuditCategoryByProjectId(projectId,CategoryId,AuditId); //Error handling for bug of same audit but not same category
+            if(Validation == false){
+                return NotFound();
+            }
             var auditQuestion = auditquestionModel.toAuditQuestion(CategoryId);
             await _AuditQuestionRepo.CreateAuditQuestion(auditQuestion);
 
@@ -84,7 +71,7 @@ namespace Backend.Controllers
         }
 
         
-        [HttpPut("{AuditId:int}/{QuestionId:int}")]
+        [HttpPut("{AuditId:int}/question{QuestionId:int}")]
         [ValidateUser("Admin", "Auditor","ProjectManagment","Owner")]
         public async Task<IActionResult> EditQuestionById([FromRoute] int AuditId,[FromRoute] int QuestionId,[FromBody] AuditUpdateQuestionDto QuestionModel){
             if(!ModelState.IsValid) return BadRequest(ModelState); 
@@ -96,38 +83,17 @@ namespace Backend.Controllers
             return Ok(AuditQuestion);
         }
 
-        [HttpPut("{auditId:int}/{auditCategoryId}")] //Problems requring quesiton text ? and in the controller I should add a Post for questions
+        [HttpPut("{auditId:int}/category{auditCategoryId:int}")] 
+        [ValidateUser("Admin", "Auditor","ProjectManagment","Owner")]
         public async Task<IActionResult> UpdateCategory([FromRoute] int auditId, [FromRoute] int auditCategoryId,[FromBody]UpdatAuditCategory auditCategoryModel ){
-              if(!ModelState.IsValid){
-                return BadRequest(ModelState);
-            }
-            List<string> permissions = new List<string>() {"Admin","Auditor","ProjectManagment","Owner"};
-            var username = User.FindFirst(ClaimTypes.Name)?.Value;
             var projectId = Convert.ToInt32(User.FindFirst("Project")?.Value);
-            var role = User.FindFirst(ClaimTypes.Role)?.Value;
-            var ProjectValidation =  await _userValid.ValidationUserAndProjectAsync(username, projectId, role,permissions);
-            if(ProjectValidation == false){
-                return Unauthorized();
-                }
-
             var Audit = await _AuditRepo.GetAuditById(auditId,projectId);
-
-            if(Audit == null){
-                return NotFound();
-            }
-
+            if(Audit == null) return NotFound();
             var UpdatAuditCategory = await _AuditCateRepo.UpdateAuditCategory(auditId,auditCategoryId,auditCategoryModel);
-
-            if(UpdatAuditCategory == null){
-                return NotFound();
-            }
-
-            return Ok(UpdatAuditCategory);
-
-
-
-
+            if(UpdatAuditCategory ==null) return NotFound();
+            return Ok(auditCategoryModel);
         }
+
         [HttpDelete("{auditID:int}/{auditCategoryId:int}")] 
         [ValidateUser("Admin", "Auditor","ProjectManagment","Owner")] //Need to make a dto for the delete
         public async Task<IActionResult> DeleteAuditCategory([FromRoute] int auditID, [FromRoute] int auditCategoryId){
@@ -138,7 +104,12 @@ namespace Backend.Controllers
 
             if(AuditCategory == null) return NotFound();
 
-            return Ok("Deleted");
+            var result = new {
+                auditCategoryId = AuditCategory.Id,
+                auditName = AuditCategory.Name,
+                description =  AuditCategory.description
+            };
+            return Ok(result);
         }
 
     }
